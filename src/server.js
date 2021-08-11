@@ -1,6 +1,6 @@
 import express from 'express';
 import http from 'http';
-import WebSocket from 'ws';
+import SocketIO from 'socket.io';
 
 const app = express();
 
@@ -14,39 +14,18 @@ app.get("/*", (req, res) => res.redirect("/"));
 
 const handleListen = () => console.log("Listening on http://localhost:3000")
 
-const server = http.createServer(app);
+const httpServer = http.createServer(app);
 
-const wss = new WebSocket.Server({server});
+const io = SocketIO(httpServer);
 
-const onSocketClose = () => console.log("Disconnected from the Browser");
-
-
-const sockets = [];
-
-// opening connection to browser : socket
-wss.on("connection", (socket) => {
-    console.log("Connected to Browser");
-    // when browser enters store in sockets array
-    sockets.push(socket);
-    // set default nickname as Anonymous
-    socket["nickname"] = "Anonymous";
-    
-    socket.on("message", (msg) => {
-        const message = JSON.parse(msg);
-        switch(message.type) {
-            case "new_message": 
-                // sockets 어레이에 있는 모든 소켓에게 메세지를 전달(client로)한다. 
-                sockets.forEach(aSocket => aSocket.send(`${socket.nickname} : ${message.payload}`));
-                break;
-            case "nickname": 
-                // socket 객체안에 닉네임을 넣었다 
-                socket["nickname"] = message.payload
-                break;
-            default:
-                return;
-        }
-    });
-    socket.on("close", onSocketClose)
+io.on("connection", (socket) => {
+    socket.on("enter_room", (roomname, backendDone)=> {
+        console.log(roomname);
+        setTimeout(()=> {
+            backendDone("hello from backend"); 
+        }, 3000)
+    })
 });
 
-server.listen(3000, handleListen);
+
+httpServer.listen(3000, handleListen);
