@@ -20,13 +20,32 @@ const wss = new WebSocket.Server({server});
 
 const onSocketClose = () => console.log("Disconnected from the Browser");
 
-const onSocketMessage = (message) => console.log(message.toString("utf8"))
+
+const sockets = [];
 
 // opening connection to browser : socket
 wss.on("connection", (socket) => {
-    console.log("Connected to Browser")
-    socket.send("hello world")
-    socket.on("message", onSocketMessage);
+    console.log("Connected to Browser");
+    // when browser enters store in sockets array
+    sockets.push(socket);
+    // set default nickname as Anonymous
+    socket["nickname"] = "Anonymous";
+    
+    socket.on("message", (msg) => {
+        const message = JSON.parse(msg);
+        switch(message.type) {
+            case "new_message": 
+                // sockets 어레이에 있는 모든 소켓에게 메세지를 전달(client로)한다. 
+                sockets.forEach(aSocket => aSocket.send(`${socket.nickname} : ${message.payload}`));
+                break;
+            case "nickname": 
+                // socket 객체안에 닉네임을 넣었다 
+                socket["nickname"] = message.payload
+                break;
+            default:
+                return;
+        }
+    });
     socket.on("close", onSocketClose)
 });
 
