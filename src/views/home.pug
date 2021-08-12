@@ -14,10 +14,14 @@ html(lang="en")
                 form
                     input(type="text" placeholder="Room name" required)
                     button Enter Room
+                form#nickname
+                    input(type="text" placeholder="set nickname" required)
+                    button Save
             div#room
                 h3 
+                span#myNickname 
                 ul
-                form
+                form#message
                     input(type="text" placeholder="Write a message" required)
                     button Send
         script(src="/socket.io/socket.io.js") 

@@ -19,6 +19,7 @@ const httpServer = http.createServer(app);
 const io = SocketIO(httpServer);
 
 io.on("connection", (socket) => {
+    socket["nickname"] = "Anonymous";
     socket.onAny((event) => {
         console.log(`Socket Event: ${event}`);
     })
@@ -28,19 +29,24 @@ io.on("connection", (socket) => {
         // execute frontend showRoom fn
         showRoom();
         // let others know someone enters a room exclude me
-        socket.to(roomname).emit("welcome");
+        socket.to(roomname).emit("welcome", socket.nickname);
         // store roomname in socket object
-        // socket["roomname"] = roomname;
+        socket["roomname"] = roomname;
     });
 
     socket.on("disconnecting", ()=> {
-        socket.rooms.forEach(room => socket.to(room).emit("bye"));
+        socket.rooms.forEach(room => socket.to(room).emit("bye", socket.nickname));
     });
 
     socket.on("new_message", (message, roomName, done) => {
-        // to everyone in room, use io instead of socket
-        socket.to(roomName).emit("seeMessage", message);
+        // show message other side clients in same room
+        socket.to(roomName).emit("seeMessage", `${socket.nickname}: ${message}`);
         done();
+    });
+
+    // store nickname in socket object
+    socket.on("nickname", (nickname) => {
+        socket["nickname"] = nickname;
     });
 
 });

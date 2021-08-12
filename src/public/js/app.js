@@ -1,11 +1,18 @@
 const socket = io();
-
 const welcome = document.querySelector("#welcome");
 const form = welcome.querySelector("form");
 const room = document.getElementById("room");
+const nicknameForm = welcome.querySelector("#nickname");
+const messageForm = room.querySelector("#message");
+const mynickname = document.querySelector("#myNickname");
 
 room.hidden = true;
 let roomName;
+mynickname.innerText = "My nickname: Anonymous"
+
+function setMyNickname(nickname) {
+    mynickname.innerText = `My nickname: ${nickname}`;
+}
 
 function addMessage(message){
     const ul = room.querySelector("ul");
@@ -16,7 +23,7 @@ function addMessage(message){
 
 const handleMessageSubmit = (e) => {
     e.preventDefault();
-    const input = room.querySelector("input");
+    const input = messageForm.querySelector("input");
     const value = input.value;
     // send socket event 
     socket.emit("new_message", input.value, roomName, ()=> {
@@ -25,15 +32,23 @@ const handleMessageSubmit = (e) => {
     input.value = "";
 };
 
+
+
 function showRoom() {
     welcome.hidden = true;
     room.hidden = false;
     const h3 = room.querySelector("h3");
     h3.innerText = `Room ${roomName}`;
-    const chatForm = room.querySelector("form");
-    chatForm.addEventListener("submit", handleMessageSubmit);
+    messageForm.addEventListener("submit", handleMessageSubmit);
 };
 
+const handleNicknameSubmit = (e) => {
+    e.preventDefault();
+    const input = nicknameForm.querySelector("input");
+    socket.emit("nickname", input.value);
+    setMyNickname(input.value);
+    input.value = "";
+};
 
 const handleRoomSubmit = (e) => {
     e.preventDefault();
@@ -43,14 +58,15 @@ const handleRoomSubmit = (e) => {
     input.value= "";
 };
 
+nicknameForm.addEventListener("submit", handleNicknameSubmit);
 form.addEventListener("submit", handleRoomSubmit);
 
-socket.on("welcome", ()=> {
-    addMessage("Someone Joined!");
+socket.on("welcome", (nickname)=> {
+    addMessage(`${nickname} enters the room`);
 });
 
-socket.on("bye", ()=> {
-    addMessage("Someone Left")
+socket.on("bye", (nickname)=> {
+    addMessage(`${nickname} left the room`)
 })
 
 // other client see message
