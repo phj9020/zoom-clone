@@ -5,6 +5,7 @@ const room = document.getElementById("room");
 const nicknameForm = welcome.querySelector("#nickname");
 const messageForm = room.querySelector("#message");
 const mynickname = document.querySelector("#myNickname");
+const h3 = room.querySelector("h3");
 
 room.hidden = true;
 let roomName;
@@ -37,7 +38,6 @@ const handleMessageSubmit = (e) => {
 function showRoom() {
     welcome.hidden = true;
     room.hidden = false;
-    const h3 = room.querySelector("h3");
     h3.innerText = `Room ${roomName}`;
     messageForm.addEventListener("submit", handleMessageSubmit);
 };
@@ -61,11 +61,15 @@ const handleRoomSubmit = (e) => {
 nicknameForm.addEventListener("submit", handleNicknameSubmit);
 form.addEventListener("submit", handleRoomSubmit);
 
-socket.on("welcome", (nickname)=> {
+// listen on when someon enters 
+socket.on("welcome", (nickname, newCount)=> {
+    h3.innerText = `Room ${roomName} (${newCount})`;
     addMessage(`${nickname} enters the room`);
 });
 
-socket.on("bye", (nickname)=> {
+// listen on when someone leaves 
+socket.on("bye", (nickname, newCount)=> {
+    h3.innerText = `Room ${roomName} (${newCount})`;
     addMessage(`${nickname} left the room`)
 })
 
@@ -74,7 +78,7 @@ socket.on("seeMessage", (message)=> {
     addMessage(message);
 });
 
-// listen room change event
+// listen room change event : show currently opening rooms 
 socket.on("room_change", (rooms)=> {
     console.log(rooms)
     const roomList = welcome.querySelector("ul");

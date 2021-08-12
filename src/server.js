@@ -1,6 +1,7 @@
 import express from 'express';
 import http from 'http';
-import SocketIO from 'socket.io';
+import { Server }  from 'socket.io';
+import { instrument } from "@socket.io/admin-ui";
 
 const app = express();
 
@@ -15,7 +16,16 @@ app.get("/*", (req, res) => res.redirect("/"));
 const handleListen = () => console.log("Listening on http://localhost:3000")
 
 const httpServer = http.createServer(app);
-const io = SocketIO(httpServer);
+const io = new Server(httpServer, {
+    cors: {
+        origin: ["https://admin.socket.io"],
+        credentials: true
+    }
+});
+
+instrument(io, {
+    auth: false
+});
 
 
 function publicRooms(){
@@ -31,6 +41,10 @@ function publicRooms(){
     return publicRooms;
 };
 
+function countRoom(roomName){
+    return io.sockets.adapter.rooms.get(roomName)?.size
+}
+
 
 io.on("connection", (socket) => {
     socket["nickname"] = "Anonymous";
@@ -43,7 +57,7 @@ io.on("connection", (socket) => {
         // execute frontend showRoom fn
         showRoom();
         // let others know someone enters a room exclude me
-        socket.to(roomname).emit("welcome", socket.nickname);
+        socket.to(roomname).emit("welcome", socket.nickname, countRoom(roomname));
         // store roomname in socket object
         socket["roomname"] = roomname;
         // when someone enters a room broadcast everyone in the apllication  
@@ -51,7 +65,7 @@ io.on("connection", (socket) => {
     });
     
     socket.on("disconnecting", ()=> {
-        socket.rooms.forEach(room => socket.to(room).emit("bye", socket.nickname));
+        socket.rooms.forEach(room => socket.to(room).emit("bye", socket.nickname, countRoom(room) - 1));
     });
     
     socket.on("disconnect", ()=>{
