@@ -72,4 +72,19 @@ socket.on("bye", (nickname)=> {
 // other client see message
 socket.on("seeMessage", (message)=> {
     addMessage(message);
+});
+
+// listen room change event
+socket.on("room_change", (rooms)=> {
+    console.log(rooms)
+    const roomList = welcome.querySelector("ul");
+    roomList.innerHTML = "";
+    if(rooms.length === 0) {
+        return;
+    }
+    rooms.forEach(room => {
+        const li = document.createElement("li");
+        li.innerText = `room name: ${room}`;
+        roomList.appendChild(li);
+    });
 })
