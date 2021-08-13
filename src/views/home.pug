@@ -10,21 +10,10 @@ html(lang="en")
         header
             h1 Zoom-Clone
         main
-            div#welcome
-                h4 Opening Rooms: 
-                ul
-                form
-                    input(type="text" placeholder="Room name" required)
-                    button Enter Room
-                form#nickname
-                    input(type="text" placeholder="set nickname" required)
-                    button Save
-            div#room
-                h3 
-                span#myNickname 
-                ul
-                form#message
-                    input(type="text" placeholder="Write a message" required)
-                    button Send
+            div#myStream
+                video#myFace(autoplay, playsinline, width="400", height="400")
+                button#mute Mute
+                button#camera Camera Off
+                select#cameras
         script(src="/socket.io/socket.io.js") 
         script(src="/public/js/app.js")
