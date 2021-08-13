@@ -13,11 +13,16 @@ let cameraOff = false;
 async function getCameras(){
     try {
         const devices =  await navigator.mediaDevices.enumerateDevices();
-        const cameras = devices.filter(device => device.kind === "videoinput")
+        const cameras = devices.filter(device => device.kind === "videoinput");
+        const currentCamera = myStream.getVideoTracks()[0];
         cameras.forEach(camera => {
             const option = document.createElement("option");
             option.value = camera.deviceId;
             option.innerText = camera.label;
+            // 카메라 옵션이 현재 선택된 카메라와 같은 label을 가지고 있다면 그것을 사용해라 
+            if(currentCamera.label === camera.label) {
+                option.selected = true;
+            }
             camerasSelect.appendChild(option);
         })
     } catch (e) {
@@ -25,19 +30,29 @@ async function getCameras(){
     }
 };
 
-async function getMedia() {
+async function getMedia(deviceId) {
+    // when deviceId not exist, use initialConstrains
+    const initialConstrains = {
+        audio: true,
+        video: { facingMode : "user"}
+    };
+    // when deviceId use cameraConstrain
+    const cameraConstrains = {
+        audio: true,
+        video: { deviceId: { exact: deviceId } }
+    };
+
     try {
         myStream = await navigator.mediaDevices.getUserMedia(
-            { 
-                audio: true, 
-                video: true 
-            }
+            deviceId ? cameraConstrains : initialConstrains
         );
         // put stream as srcObject in myFace element
         myFace.srcObject = myStream;
         
         // call getCameras fn
-        await getCameras();
+        if(!deviceId) {
+            await getCameras();
+        }
     } catch (err) {
         console.log(err)
     }
@@ -68,5 +83,10 @@ function handleCamera(){
     }
 }
 
+async function handleCameraChange() {
+    await getMedia(camerasSelect.value)
+}
+
 muteBtn.addEventListener("click", handleMute);
 cameraBtn.addEventListener("click", handleCamera);
+camerasSelect.addEventListener("input", handleCameraChange)
