@@ -1,7 +1,6 @@
 import express from 'express';
 import http from 'http';
 import { Server }  from 'socket.io';
-import { instrument } from "@socket.io/admin-ui";
 
 const app = express();
 
@@ -18,5 +17,12 @@ const handleListen = () => console.log("Listening on http://localhost:3000")
 const httpServer = http.createServer(app);
 const io = new Server(httpServer);
 
+io.on("connection", (socket)=> {
+    socket.on("join_room", (roomName, startMedia) => {
+        socket.join(roomName);
+        startMedia();
+        socket.to(roomName).emit("welcome");
+    })
+})
 
 httpServer.listen(3000, handleListen);

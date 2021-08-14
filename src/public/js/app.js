@@ -3,12 +3,14 @@ const myFace = document.getElementById("myFace");
 const muteBtn = document.getElementById("mute");
 const cameraBtn = document.getElementById("camera");
 const camerasSelect = document.getElementById("cameras");
+const call = document.getElementById("call");
 
 // stream : video audio combined
 let myStream;
 let mute = false;
 let cameraOff = false;
-
+call.hidden = true;
+let roomName;
 
 async function getCameras(){
     try {
@@ -58,9 +60,6 @@ async function getMedia(deviceId) {
     }
 };
 
-getMedia();
-
-
 function handleMute(){
     myStream.getAudioTracks().forEach((track) => track.enabled = !track.enabled);
     if(!mute) {
@@ -85,8 +84,37 @@ function handleCamera(){
 
 async function handleCameraChange() {
     await getMedia(camerasSelect.value)
-}
+};
 
 muteBtn.addEventListener("click", handleMute);
 cameraBtn.addEventListener("click", handleCamera);
-camerasSelect.addEventListener("input", handleCameraChange)
+camerasSelect.addEventListener("input", handleCameraChange);
+
+// Welcome Form : choose a room
+const welcome = document.getElementById("welcome");
+const welcomeForm = welcome.querySelector("form");
+
+function startMedia(){
+    // hide welcome and show call, getMedia
+    welcome.hidden = true;
+    call.hidden = false;
+    getMedia();
+};
+
+function handleRoomEnter(e) {
+    e.preventDefault();
+    const input = welcomeForm.querySelector("input");
+    console.log(input.value)
+    // 백엔드에 이벤트 보내기
+    socket.emit("join_room", input.value, startMedia);
+    roomName = input.value;
+    input.value = "";
+};
+
+welcomeForm.addEventListener("submit", handleRoomEnter);
+
+
+// socket code
+socket.on("welcome", ()=> {
+    console.log("someone joined")
+})
