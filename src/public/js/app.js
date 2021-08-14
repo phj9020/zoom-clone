@@ -11,6 +11,7 @@ let mute = false;
 let cameraOff = false;
 call.hidden = true;
 let roomName;
+let myPeerConnection;
 
 async function getCameras(){
     try {
@@ -94,17 +95,18 @@ camerasSelect.addEventListener("input", handleCameraChange);
 const welcome = document.getElementById("welcome");
 const welcomeForm = welcome.querySelector("form");
 
-function startMedia(){
+async function startMedia(){
     // hide welcome and show call, getMedia
     welcome.hidden = true;
     call.hidden = false;
-    getMedia();
+    await getMedia();
+    // step 1
+    makeConnection();
 };
 
 function handleRoomEnter(e) {
     e.preventDefault();
     const input = welcomeForm.querySelector("input");
-    console.log(input.value)
     // 백엔드에 이벤트 보내기
     socket.emit("join_room", input.value, startMedia);
     roomName = input.value;
@@ -115,6 +117,30 @@ welcomeForm.addEventListener("submit", handleRoomEnter);
 
 
 // socket code
-socket.on("welcome", ()=> {
-    console.log("someone joined")
+
+
+socket.on("welcome", async()=> {
+    // console.log("someone joined");
+    // step 3: create offer
+    const offer = await myPeerConnection.createOffer();
+    // step 4: setlocaldescription
+    myPeerConnection.setLocalDescription(offer);
+    console.log("send the offer", offer);
+    // step 5: send offer to server (Browser A send offer) 
+    socket.emit("offer", offer, roomName);
+});
+
+// get offer in Browser B
+socket.on("offer", (offer) => {
+    console.log("offer", offer)
 })
+
+// RTC code : make connection 
+// step 2 : create peer connection & addTrack 
+function makeConnection() {
+    // peer connection on each browser
+    myPeerConnection = new RTCPeerConnection();
+    // console.log(myStream.getTracks())
+    // 각 브라우저에서 카메라, 오디오 데이터 스트림을 받아서 myPeerConnnection안에 집어 넣었다.
+    myStream.getTracks().forEach(track => myPeerConnection.addTrack(track, myStream))
+};

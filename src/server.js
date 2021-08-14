@@ -22,6 +22,10 @@ io.on("connection", (socket)=> {
         socket.join(roomName);
         startMedia();
         socket.to(roomName).emit("welcome");
+    });
+    // server gets offer from Browser A and send it to Browser B
+    socket.on("offer", (offer, roomName) => {
+        socket.to(roomName).emit("offer", offer);
     })
 })
 
