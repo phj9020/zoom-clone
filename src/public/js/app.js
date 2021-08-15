@@ -84,7 +84,14 @@ function handleCamera(){
 }
 
 async function handleCameraChange() {
-    await getMedia(camerasSelect.value)
+    await getMedia(camerasSelect.value);
+    if(myPeerConnection) {
+        // get current track
+        const videoTrack = myStream.getVideoTracks()[0];
+        const videoSender = myPeerConnection.getSenders().find(sender => sender.track.kind === "video");
+        // send my current track
+        videoSender.replaceTrack(videoTrack);
+    }
 };
 
 muteBtn.addEventListener("click", handleMute);
@@ -163,7 +170,19 @@ socket.on("ice", (candidate)=> {
 // step 2 : create peer connection & addTrack 
 function makeConnection() {
     // peer connection on each browser
-    myPeerConnection = new RTCPeerConnection();
+    myPeerConnection = new RTCPeerConnection({
+        iceServers: [
+            {
+                urls: [
+                "stun:stun.l.google.com:19302",
+                "stun:stun1.l.google.com:19302",
+                "stun:stun2.l.google.com:19302",
+                "stun:stun3.l.google.com:19302",
+                "stun:stun4.l.google.com:19302",
+                ],
+            },
+        ],
+    });
     // step 13: addEventListener with icecandidate
     myPeerConnection.addEventListener("icecandidate", handleIce);
     // step 17 : add addstream event 

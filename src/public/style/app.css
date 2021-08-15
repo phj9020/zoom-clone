@@ -68,3 +68,9 @@ header > h1 {
 #controllers > #camera {
     margin: 0px 20px;
 }
+
+@media screen and (max-width: 500px) {
+    #callContainer {
+        flex-direction: column;
+    }
+}
