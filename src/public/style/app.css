@@ -1,3 +1,70 @@
 body {
     background-color: #25253a;
+    color: white;
+    margin: 0px;
+}
+header {
+    width: 100%;
+    text-align: center;
+    padding: 50px 0px;
+}
+
+header > h1 {
+    margin: 0px;
+}
+
+#welcome {
+    width: 100%;
+    padding: 50px 0px;
+}
+
+#welcome > form {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+#welcome > form > input {
+    margin-bottom: 50px;
+    padding: 15px 20px;
+    border: 1px solid white;
+    border-radius: 10px;
+    outline: none;
+}
+
+#welcome > form > button {
+    all: unset;
+    padding: 10px 20px;
+    cursor: pointer;
+    border: 1px solid white;
+    border-radius: 10px;
+}
+
+#callContainer {
+    display: flex;
+    width: 100%;
+    justify-content: center;
+    align-items: center;
+}
+
+#myStream,
+#peerStream {
+    padding: 0px 30px;
+}
+
+#controllers {
+    text-align: center;
+}
+
+#mute,
+#camera,
+#cameras {
+    all: unset;
+    padding: 10px 15px;
+    background-color: purple;
+    cursor: pointer;
+}
+#controllers > #camera {
+    margin: 0px 20px;
 }

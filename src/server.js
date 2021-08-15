@@ -30,6 +30,10 @@ io.on("connection", (socket)=> {
     socket.on("answer", (answer, roomName) => {
         socket.to(roomName).emit("answer", answer);
     });
+    // step 15 : get ice event and send candidate to Browser
+    socket.on("ice", (candidate, roomName) => {
+        socket.to(roomName).emit("ice", candidate);
+    });
 })
 
 httpServer.listen(3000, handleListen);

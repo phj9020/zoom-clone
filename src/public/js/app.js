@@ -143,6 +143,7 @@ socket.on("offer", async(offer) => {
     myPeerConnection.setLocalDescription(answer);
     // step 10 : send the answer to Browser A 
     socket.emit('answer', answer, roomName);
+    console.log("send the answer from Browser B to server")
 });
 
 // step 12 : Browser A gets answer
@@ -152,13 +153,37 @@ socket.on("answer", (answer)=> {
     myPeerConnection.setRemoteDescription(answer);
 });
 
+// step 16: get candidate from ice event from Server and addIceCandidate()
+socket.on("ice", (candidate)=> {
+    console.log("received candidate")
+    myPeerConnection.addIceCandidate(candidate);
+});
 
 // RTC code : make connection 
 // step 2 : create peer connection & addTrack 
 function makeConnection() {
     // peer connection on each browser
     myPeerConnection = new RTCPeerConnection();
+    // step 13: addEventListener with icecandidate
+    myPeerConnection.addEventListener("icecandidate", handleIce);
+    // step 17 : add addstream event 
+    myPeerConnection.addEventListener("addstream", handleAddStream);
     // console.log(myStream.getTracks())
     // 각 브라우저에서 카메라, 오디오 데이터 스트림을 받아서 myPeerConnnection안에 집어 넣었다.
     myStream.getTracks().forEach(track => myPeerConnection.addTrack(track, myStream))
+};
+
+// step 14 : send Candidate
+function handleIce(data){
+    console.log("send candidate");
+    socket.emit("ice", data.candidate, roomName);
+};
+
+// step 18 : handleAddStream
+function handleAddStream(data) {
+    console.log("got stream from peer");
+    console.log("peer stream", data.stream)
+    console.log("my stream", myStream)
+    const peerStream = document.getElementById("peerFace");
+    peerStream.srcObject = data.stream;
 };
