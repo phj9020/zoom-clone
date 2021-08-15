@@ -24,5 +24,10 @@ html(lang="en")
                     button#mute Mute
                     button#camera Camera Off
                     select#cameras
+            div#chat
+                ul#chatItemsContainer
+                form#chatForm
+                    input(type="text" placeholder="Send Message")
+                    button(type="submit") Send
         script(src="/socket.io/socket.io.js") 
         script(src="/public/js/app.js")

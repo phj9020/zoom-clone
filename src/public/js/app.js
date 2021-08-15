@@ -4,14 +4,19 @@ const muteBtn = document.getElementById("mute");
 const cameraBtn = document.getElementById("camera");
 const camerasSelect = document.getElementById("cameras");
 const call = document.getElementById("call");
+const chat = document.getElementById("chat");
+const ul = document.getElementById("chatItemsContainer");
 
 // stream : video audio combined
 let myStream;
 let mute = false;
 let cameraOff = false;
 call.hidden = true;
+chat.hidden = true;
 let roomName;
 let myPeerConnection;
+let myDataChannel;
+
 
 async function getCameras(){
     try {
@@ -106,9 +111,12 @@ async function initCall(){
     // hide welcome and show call, getMedia
     welcome.hidden = true;
     call.hidden = false;
+    chat.hidden = false;
     await getMedia();
     // step 1
     makeConnection();
+    const chatForm = document.getElementById("chatForm");
+    chatForm.addEventListener("submit", handleChatSubmit)
 };
 
 async function handleRoomEnter(e) {
@@ -128,6 +136,13 @@ welcomeForm.addEventListener("submit", handleRoomEnter);
 
 // runs in Browser A 
 socket.on("welcome", async()=> {
+    // offer 를 만드는 주체가 data channel을 만드는 주체이다 즉 Browser A
+    myDataChannel = myPeerConnection.createDataChannel("chat");
+    myDataChannel.addEventListener("message", (data)=> {
+        const chatText = data.data;
+        receivedChat(chatText);
+    });
+    console.log("made data channel")
     // console.log("someone joined");
     // step 3: create offer
     const offer = await myPeerConnection.createOffer();
@@ -141,6 +156,15 @@ socket.on("welcome", async()=> {
 // runs in Browser B 
 // get offer in Browser B
 socket.on("offer", async(offer) => {
+    // offer를 받는 peer, 즉 Browser B는 데이터 채널이 있을 때 event listener에 추가한다.
+    myPeerConnection.addEventListener("datachannel", (event)=> {
+        myDataChannel = event.channel;
+        myDataChannel.addEventListener("message", (data)=> {
+            const chatText = data.data;
+            receivedChat(chatText);
+            
+        })
+    })
     console.log("get offer from Browser A", offer);
     // Step 7 : setRemoteDescription     get offer and put it in setRemoteDescription
     myPeerConnection.setRemoteDescription(offer);
@@ -206,3 +230,29 @@ function handleAddStream(data) {
     const peerStream = document.getElementById("peerFace");
     peerStream.srcObject = data.stream;
 };
+
+
+// chat 
+function handleChatSubmit(e){
+    e.preventDefault();
+    const input = chat.querySelector("input");
+    createChat(input.value);
+    input.value = "";
+}
+
+function createChat(inputValue){
+    const li = document.createElement("li");
+    li.classList.add("me")
+    li.innerText = `나 : ${inputValue}`;
+    ul.appendChild(li);
+    myDataChannel.send(inputValue);
+    ul.scrollTop = ul.scrollHeight;
+};
+
+function receivedChat(text) {
+    const li = document.createElement("li");
+    li.classList.add("other")
+    li.innerText = `상대방 : ${text}`;
+    ul.appendChild(li);
+    ul.scrollTop = ul.scrollHeight;
+}
