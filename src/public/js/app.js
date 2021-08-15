@@ -95,7 +95,7 @@ camerasSelect.addEventListener("input", handleCameraChange);
 const welcome = document.getElementById("welcome");
 const welcomeForm = welcome.querySelector("form");
 
-async function startMedia(){
+async function initCall(){
     // hide welcome and show call, getMedia
     welcome.hidden = true;
     call.hidden = false;
@@ -104,11 +104,12 @@ async function startMedia(){
     makeConnection();
 };
 
-function handleRoomEnter(e) {
+async function handleRoomEnter(e) {
     e.preventDefault();
     const input = welcomeForm.querySelector("input");
+    await initCall();
     // 백엔드에 이벤트 보내기
-    socket.emit("join_room", input.value, startMedia);
+    socket.emit("join_room", input.value);
     roomName = input.value;
     input.value = "";
 };
@@ -118,22 +119,39 @@ welcomeForm.addEventListener("submit", handleRoomEnter);
 
 // socket code
 
-
+// runs in Browser A 
 socket.on("welcome", async()=> {
     // console.log("someone joined");
     // step 3: create offer
     const offer = await myPeerConnection.createOffer();
-    // step 4: setlocaldescription
+    // step 4: Browser A : setlocaldescription
     myPeerConnection.setLocalDescription(offer);
     console.log("send the offer", offer);
     // step 5: send offer to server (Browser A send offer) 
     socket.emit("offer", offer, roomName);
 });
 
+// runs in Browser B 
 // get offer in Browser B
-socket.on("offer", (offer) => {
-    console.log("offer", offer)
-})
+socket.on("offer", async(offer) => {
+    console.log("get offer from Browser A", offer);
+    // Step 7 : setRemoteDescription     get offer and put it in setRemoteDescription
+    myPeerConnection.setRemoteDescription(offer);
+    // step 8 : create answer
+    const answer = await myPeerConnection.createAnswer();
+    // step 9 : Browser B also setLocalDescription
+    myPeerConnection.setLocalDescription(answer);
+    // step 10 : send the answer to Browser A 
+    socket.emit('answer', answer, roomName);
+});
+
+// step 12 : Browser A gets answer
+socket.on("answer", (answer)=> {
+    console.log("answer from browser B", answer);
+    // Browser A will have remoteDescription as well
+    myPeerConnection.setRemoteDescription(answer);
+});
+
 
 // RTC code : make connection 
 // step 2 : create peer connection & addTrack 

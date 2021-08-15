@@ -18,15 +18,18 @@ const httpServer = http.createServer(app);
 const io = new Server(httpServer);
 
 io.on("connection", (socket)=> {
-    socket.on("join_room", (roomName, startMedia) => {
+    socket.on("join_room", (roomName) => {
         socket.join(roomName);
-        startMedia();
         socket.to(roomName).emit("welcome");
     });
-    // server gets offer from Browser A and send it to Browser B
+    // step 6 : server gets offer from Browser A and send it to Browser B
     socket.on("offer", (offer, roomName) => {
         socket.to(roomName).emit("offer", offer);
-    })
+    });
+    // step 11 : gets answer from Browser B and send it to Browser A
+    socket.on("answer", (answer, roomName) => {
+        socket.to(roomName).emit("answer", answer);
+    });
 })
 
 httpServer.listen(3000, handleListen);
